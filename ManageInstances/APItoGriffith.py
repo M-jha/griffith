@@ -97,23 +97,33 @@ def get_aws_session():
 def add_instance_condition():
     data = request.json
 
-    # Required fields in the JSON payload
-    required_fields = ['InstanceID', 'Weekend', 'NightTime', 'PublicHoliday', 'CustomStartTime', 'CustomEndTime']
+    # Required fields in the JSON payload (include Category)
+    required_fields = ['InstanceID', 'Category']
 
-    # Check if all required fields are present
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing fields in the request'}), 400
+    # Check for required fields and set defaults
+    instance_id = data.get('InstanceID')
+    category = data.get('Category')
+    weekend = data.get('Weekend', 'no')  # Default to 'no'
+    nighttime = data.get('NightTime', 'no')  # Default to 'no'
+    public_holiday = data.get('PublicHoliday', 'no')  # Default to 'no'
+    custom_start_time = data.get('CustomStartTime', '00:00')  # Default to '00:00'
+    custom_end_time = data.get('CustomEndTime', '23:59')  # Default to '23:59'
+
+    # Validate required fields
+    if not instance_id or not category:
+        return jsonify({'error': 'Missing InstanceID or Category in the request'}), 400
 
     # Append the data to the CSV
     with open(CSV_FILE_PATH, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([
-            data['InstanceID'],
-            data['Weekend'],
-            data['NightTime'],
-            data['PublicHoliday'],
-            data['CustomStartTime'],
-            data['CustomEndTime']
+            instance_id,
+            category,
+            weekend,
+            nighttime,
+            public_holiday,
+            custom_start_time,
+            custom_end_time
         ])
 
     return jsonify({'message': 'Instance condition added successfully!'}), 201

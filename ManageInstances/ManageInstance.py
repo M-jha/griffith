@@ -29,36 +29,49 @@ def should_stop_instance(row):
             return True
     return False
 
-def manage_ec2_instances():
-    # Read from CSV
-    df = pd.read_csv('/home/murli/hackathon-2024/ManageInstances/ec2_conditions.csv')
+def manage_ec2_instance(row):
+    ec2_client = boto3.client('ec2')
+    instance_id = row['InstanceID'].replace("'", "")
+    instance_status = ec2_client.describe_instance_status(InstanceIds=[instance_id])
 
-    session = boto3.Session(
-        aws_access_key_id='AKIAVVPPFW4MGPYYQYPU',
-        aws_secret_access_key='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',
-        region_name='us-west-2'
-    )
+    if instance_status['InstanceStatuses']:
+        current_status = instance_status['InstanceStatuses'][0]['InstanceState']['Name']
+
+        if should_stop_instance(row):
+            if current_status == 'running':
+                ec2_client.stop_instances(InstanceIds=[instance_id])
+                print(f"Stopped EC2 instance: {instance_id}")
+        else:
+            if current_status == 'stopped':
+                ec2_client.start_instances(InstanceIds=[instance_id])
+                print(f"Started EC2 instance: {instance_id}")
+
+def manage_rds_instance(row):
+    rds_client = boto3.client('rds')
+    db_instance_id = row['InstanceID'].replace("'", "")
+    db_instance_status = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_id)
+
+    if db_instance_status['DBInstances']:
+        current_status = db_instance_status['DBInstances'][0]['DBInstanceStatus']
+
+        if should_stop_instance(row):
+            if current_status == 'available':
+                rds_client.stop_db_instance(DBInstanceIdentifier=db_instance_id)
+                print(f"Stopped RDS instance: {db_instance_id}")
+        else:
+            if current_status == 'stopped':
+                rds_client.start_db_instance(DBInstanceIdentifier=db_instance_id)
+                print(f"Started RDS instance: {db_instance_id}")
+
+if __name__ == "__main__":
+    # Read CSV once
+    df = pd.read_csv('/home/murli/hackathon-2024/ManageInstances/ec2_conditions.csv')
 
     print(f"Running Job at {datetime.now().time()}")
 
-    # ec2_client = session.client('ec2')
-    #
-    # for _, row in df.iterrows():
-    #     instance_id = row['InstanceID']
-    #     instance_id = instance_id.replace("'", "")
-    #     instance_status = ec2_client.describe_instance_status(InstanceIds=[instance_id])
-    #
-    #     if instance_status['InstanceStatuses']:
-    #         current_status = instance_status['InstanceStatuses'][0]['InstanceState']['Name']
-    #
-    #         if should_stop_instance(row):
-    #             if current_status == 'running':
-    #                 ec2_client.stop_instances(InstanceIds=[instance_id])
-    #                 print(f"Stopped instance: {instance_id}")
-    #         else:
-    #             if current_status == 'stopped':
-    #                 ec2_client.start_instances(InstanceIds=[instance_id])
-    #                 print(f"Started instance: {instance_id}")
-
-if __name__ == "__main__":
-    manage_ec2_instances()
+    for _, row in df.iterrows():
+        category = row['Category'].strip().lower()  # Normalize the category string
+        if category == 'ec2':
+            manage_ec2_instance(row)
+        elif category == 'rds':
+            manage_rds_instance(row)
