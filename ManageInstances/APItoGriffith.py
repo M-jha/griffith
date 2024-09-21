@@ -221,40 +221,89 @@ def manage_rds_instance(action):
     return jsonify({'message': message})
 
 
+# @app.route('/bot_interaction', methods=['POST'])
+# def bot_interaction():
+#     data = request.json
+#     user_input = data.get('user_input')
+#
+#     if not user_input:
+#         return jsonify({'error': 'Missing user input in the request'}), 400
+#
+#     try:
+#         # Initialize GPTFunctionExecutor with your GitHub repo details
+#         repo_owner = 'M-jha'  # Replace with your GitHub username
+#         repo_name = 'griffith'  # Replace with your repository name
+#         executor = GPTFunctionExecutor(repo_owner, repo_name, branch='hackathon_2024')
+#         executor.run()
+#
+#         # Run the bot to interpret user input
+#         assistant_reply = executor.interpret_user_prompt(user_input)
+#
+#         # Try to extract function details from the bot's response
+#         function_details_json = executor.extract_function_details_from_reply(assistant_reply)
+#
+#         if function_details_json:
+#             # Parse the function details JSON
+#             function_details_list = json.loads(function_details_json)
+#
+#             # Dynamically execute functions based on the parsed details
+#             results = executor.execute_functions(function_details_list)
+#             return jsonify({'bot_reply': assistant_reply, 'execution_results': results})
+#
+#         return jsonify({'bot_reply': assistant_reply, 'message': 'No function details found in the bot response'})
+#
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
 @app.route('/bot_interaction', methods=['POST'])
 def bot_interaction():
     data = request.json
     user_input = data.get('user_input')
+    previous_function_details = data.get('function_details', None)  # Get previous function details if provided
 
     if not user_input:
         return jsonify({'error': 'Missing user input in the request'}), 400
 
     try:
         # Initialize GPTFunctionExecutor with your GitHub repo details
-        repo_owner = 'M-jha'  # Replace with your GitHub username
-        repo_name = 'griffith'  # Replace with your repository name
-        executor = GPTFunctionExecutor(repo_owner, repo_name, branch='hackathon_2024')
-        executor.run()
+        repo_owner = 'M-jha'
+        repo_name = 'griffith'
+        executor = GPTFunctionExecutor(repo_owner, repo_name, branch='main')
 
-        # Run the bot to interpret user input
-        assistant_reply = executor.interpret_user_prompt(user_input)
+        # Initialize the executor to set up the knowledge base
+        executor.initialize()
 
-        # Try to extract function details from the bot's response
-        function_details_json = executor.extract_function_details_from_reply(assistant_reply)
+        # If we have previous function details and the user input is 'good to go' or 'yes'
+        if previous_function_details and user_input.lower().strip() in ["yes", "good to go"]:
+            # Proceed with executing the function
+            results = executor.execute_functions(previous_function_details)
+            return jsonify({
+                'message': 'Execution completed',
+                'execution_results': results
+            })
 
-        if function_details_json:
-            # Parse the function details JSON
-            function_details_list = json.loads(function_details_json)
+        # If previous function details are provided and the user is filling missing parameters
+        if previous_function_details:
+            # Handle missing parameters filled by the user
+            for function_detail in previous_function_details:
+                for param in function_detail['parameters']:
+                    if function_detail['parameters'][param] == "":
+                        function_detail['parameters'][param] = user_input.strip()
 
-            # Dynamically execute functions based on the parsed details
-            results = executor.execute_functions(function_details_list)
-            return jsonify({'bot_reply': assistant_reply, 'execution_results': results})
+            # Ask the user if they are ready to proceed
+            return jsonify({
+                'message': "Do you want to proceed with executing these actions? Confirm with 'yes' or 'good to go'.",
+                'function_details': previous_function_details
+            })
 
-        return jsonify({'bot_reply': assistant_reply, 'message': 'No function details found in the bot response'})
+        # No previous function details, start a new interaction
+        response = executor.run(user_input)
+
+        # Return the response which now includes assistant interaction, missing parameter handling, or confirmation request
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 # GitHub API URL and PAT
 org_name = "GriffithGithubOrg"
