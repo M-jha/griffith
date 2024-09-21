@@ -1,0 +1,31 @@
+To calculate the final amount of a lump sum investment based on a specific return rate over a given number of years, you can use the compound interest formula:
+
+\[ A = P \left(1 + \frac{r}{100}\right)^t \]
+
+Where:
+- \( A \) is the final amount.
+- \( P \) is the principal amount (initial investment).
+- \( r \) is the annual return rate (as a percentage).
+- \( t \) is the number of years the money is invested.
+
+In your case:
+- \( P = 100 \)
+- \( r = 48\) (48% return)
+- \( t = 30 \)
+
+Plugging in these values:
+
+\[ A = 100 \left(1 + \frac{48}{100}\right)^{30} \]
+\[ A = 100 \left(1 + 0.48\right)^{30} \]
+\[ A = 100 (1.48)^{30} \]
+
+Now calculate \( (1.48)^{30} \):
+
+\[ (1.48)^{30} \approx 239492.59 \] (You can use a scientific calculator to get this precise value)
+
+Now multiply by the principal amount:
+
+\[ A = 100 \times 239492.59 \]
+\[ A \approx 23949259 \]
+
+So, the final amount, if you invest 100 with a 48% return rate for 30 years, will be approximately 23,949,259.
