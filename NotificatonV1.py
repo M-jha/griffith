@@ -24,7 +24,6 @@ class EmailAutomation:
         self.sender_email = sender_email
         self.sender_password = sender_password
         self.server = None
-        # Default recipients list
         self.receivers = [("Murli", "murli@cipio.ai"),
                         ("Dipshi", "dipshi@cipio.ai"),
                         ("Manthan", "mjha@cipio.ai"),
