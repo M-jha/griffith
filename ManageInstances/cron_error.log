@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/home/murli/miniconda3/envs/hackathon2024/lib/python3.9/site-packages/pandas/core/indexes/base.py", line 3805, in get_loc
+    return self._engine.get_loc(casted_key)
+  File "index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
+  File "index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7081, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7089, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'Category'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/murli/hackathon-2024/ManageInstances/ManageInstance.py", line 73, in <module>
+    category = row['Category'].strip().lower()  # Normalize the category string
+  File "/home/murli/miniconda3/envs/hackathon2024/lib/python3.9/site-packages/pandas/core/series.py", line 1121, in __getitem__
+    return self._get_value(key)
+  File "/home/murli/miniconda3/envs/hackathon2024/lib/python3.9/site-packages/pandas/core/series.py", line 1237, in _get_value
+    loc = self.index.get_loc(label)
+  File "/home/murli/miniconda3/envs/hackathon2024/lib/python3.9/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
+    raise KeyError(key) from err
+KeyError: 'Category'
+
+ERROR conda.cli.main_run:execute(125): `conda run /home/murli/miniconda3/envs/hackathon2024/bin/python /home/murli/hackathon-2024/ManageInstances/ManageInstance.py` failed. (See above for error)

@@ -4,8 +4,10 @@ import os
 import boto3
 from datetime import datetime
 from abc import ABC, abstractmethod
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # CSV file path
 CSV_FILE_PATH = '/home/murli/hackathon-2024/ManageInstances/ec2_conditions.csv'
@@ -83,15 +85,6 @@ class AWSResourceFactory:
             raise ValueError(f"Resource type '{resource_type}' is not supported.")
 
 
-# AWS Session Setup (You can modify to use environment variables or other security practices)
-def get_aws_session():
-    return boto3.Session(
-        aws_access_key_id='AKIAVVPPFW4MGPYYQYPU',
-        aws_secret_access_key='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',
-        region_name='us-west-2'
-    )
-
-
 # API to add data to CSV
 @app.route('/add_instance_condition', methods=['POST'])
 def add_instance_condition():
@@ -132,7 +125,7 @@ def add_instance_condition():
 # API to list EC2 instances
 @app.route('/list_ec2_instances', methods=['GET'])
 def list_ec2_instances():
-    session = get_aws_session()
+    session = boto3.Session()  # Pass your session to the factory or create it externally
     ec2_resource = AWSResourceFactory.create_resource('EC2', session)
     instances = ec2_resource.list_instances()
 
@@ -153,7 +146,7 @@ def list_ec2_instances():
 # API to list RDS instances
 @app.route('/list_rds_instances', methods=['GET'])
 def list_rds_instances():
-    session = get_aws_session()
+    session = boto3.Session()  # Pass your session to the factory or create it externally
     rds_resource = AWSResourceFactory.create_resource('RDS', session)
     instances = rds_resource.list_instances()
 
@@ -175,7 +168,7 @@ def list_rds_instances():
 # API to stop/start EC2 instance
 @app.route('/ec2_instance/<action>', methods=['POST'])
 def manage_ec2_instance(action):
-    session = get_aws_session()
+    session = boto3.Session()  # Pass your session to the factory or create it externally
     ec2_resource = AWSResourceFactory.create_resource('EC2', session)
 
     data = request.json
@@ -197,7 +190,7 @@ def manage_ec2_instance(action):
 # API to stop/start RDS instance
 @app.route('/rds_instance/<action>', methods=['POST'])
 def manage_rds_instance(action):
-    session = get_aws_session()
+    session = boto3.Session()  # Pass your session to the factory or create it externally
     rds_resource = AWSResourceFactory.create_resource('RDS', session)
 
     data = request.json
