@@ -87,7 +87,7 @@ class EC2ManagerUI:
         custom_end = self.custom_end_time_entry.get()
 
         # Create or append to CSV
-        file_exists = os.path.isfile('ec2_conditions.csv')
+        file_exists = os.path.isfile('../ManageInstances/ec2_conditions.csv')
         df = pd.DataFrame([{
             'InstanceID': instance_id,
             'Weekend': weekend,

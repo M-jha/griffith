@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # CSV file path
-CSV_FILE_PATH = '/home/murli/hackathon-2024/ManageInstances/ec2_conditions.csv'
+CSV_FILE_PATH = '/ManageInstances/ec2_conditions.csv'
 
 # Ensure the CSV file exists with headers if it's not present
 if not os.path.exists(CSV_FILE_PATH):
