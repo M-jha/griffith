@@ -32,10 +32,15 @@ def should_stop_instance(row):
 def manage_ec2_instance(row):
     ec2_client = boto3.client('ec2')
     instance_id = row['InstanceID'].replace("'", "")
-    instance_status = ec2_client.describe_instance_status(InstanceIds=[instance_id])
 
-    if instance_status['InstanceStatuses']:
-        current_status = instance_status['InstanceStatuses'][0]['InstanceState']['Name']
+    # Describe instances to get the current status
+    response = ec2_client.describe_instances(
+        InstanceIds=[instance_id]
+    )
+
+    # Check if instance information is available
+    if response['Reservations']:
+        current_status = response['Reservations'][0]['Instances'][0]['State']['Name']
 
         if should_stop_instance(row):
             if current_status == 'running':

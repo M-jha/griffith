@@ -302,10 +302,14 @@ def main():
 
     # Example usage for RDS
     rds_resource = AWSResourceFactory.create_resource('RDS', session)
+    ec2_resource = AWSResourceFactory.create_resource('EC2', session)
+
+    rds_instances = rds_resource.list_instances()
+    ec2_instances = ec2_resource.list_instances()
 
     # Create RDS instance
     rds_response = rds_resource.create_instance(
-        DBInstanceIdentifier='mydbinstance',
+        DBInstanceIdentifier='mydbinstance2',
         DBInstanceClass='db.t3.micro',
         Engine='mysql',
         AllocatedStorage=20,

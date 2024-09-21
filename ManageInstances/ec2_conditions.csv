@@ -1,3 +1,2 @@
-InstanceID,Weekend,NightTime,PublicHoliday,CustomStartTime,CustomEndTime
-'i-0a53c88d578746351',1,1,0,,
-i-0a53c88d578746351,1,1,0,,
+InstanceID,Category,Weekend,NightTime,CustomStartTime,CustomEndTime
+i-0a7fa50f86821225b,ec2,False,True,19:53,19:55
