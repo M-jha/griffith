@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app)
 
 # CSV file path
-CSV_FILE_PATH = '/home/murli/hackathon-2024/ManageInstances/ec2_conditions.csv'
+CSV_FILE_PATH = '/home/dipsi/griffith/ManageInstances/ec2_conditions.csv'
 
 # Ensure the CSV file exists with headers if it's not present
 if not os.path.exists(CSV_FILE_PATH):
@@ -258,7 +258,7 @@ def bot_interaction():
 
 # GitHub API URL and PAT
 org_name = "GriffithGithubOrg"
-github_pat = "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"
+github_pat = "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"
 
 # Route to get organization members
 @app.route('/org-members', methods=['GET'])
