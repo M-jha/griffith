@@ -12,11 +12,7 @@ class EC2ManagerUI:
         self.master.geometry("500x500")  # Set window size
 
         # AWS Session setup
-        self.session = boto3.Session(
-            aws_access_key_id='AKIAVVPPFW4MGPYYQYPU',
-            aws_secret_access_key='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',
-            region_name='us-west-2'
-        )
+        self.session = boto3.Session()
         self.ec2_client = self.session.client('ec2')
 
         # Headings

@@ -107,11 +107,7 @@ def should_stop_instance():
     return is_weekend() or is_night_time() or is_custom_time_range(dt_time(12, 0), dt_time(13, 0))
 
 def main():
-    session = boto3.Session(
-        aws_access_key_id='AKIAVVPPFW4MGPYYQYPU',
-        aws_secret_access_key='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',
-        region_name='us-west-2'
-    )
+    session = boto3.Session()
 
     ec2_resource = AWSResourceFactory.create_resource('EC2', session)
     instances = ec2_resource.list_instances()

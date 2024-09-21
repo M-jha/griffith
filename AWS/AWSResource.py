@@ -127,11 +127,7 @@ class AWSResourceFactory:
 
 
 def main():
-    session = boto3.Session(
-        aws_access_key_id='AKIAVVPPFW4MGPYYQYPU',
-        aws_secret_access_key='hP9DfQmkmeJP63uJiLQzwfZokXiofyPEWgfDlCdk',
-        region_name='us-west-2'
-    )
+    session = boto3.Session()
 
     # Example usage
     rds_resource = AWSResourceFactory.create_resource('RDS', session)
