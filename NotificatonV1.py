@@ -97,7 +97,6 @@ def main(subject="Your Custom Subject", body="This is the body of your custom em
 
     Default subject and body can be overridden.
     """
-    # Default recipients list
 
     # Initialize the EmailAutomation class with default parameters
     email_automation = EmailAutomation()
