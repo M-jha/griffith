@@ -1,5 +1,5 @@
 import boto3
-
+from datetime import datetime
 from Notifications import NotificatonV1
 
 class RDSResource:
@@ -123,3 +123,31 @@ class RDSResource:
         response = self.client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
         status = response['DBInstances'][0]['DBInstanceStatus']
         return status
+
+    def create_snapshot(self, db_instance_identifier, snapshot_identifier=None):
+        """
+        Create a snapshot of the specified RDS instance.
+
+        Parameters:
+            db_instance_identifier (str): The identifier of the RDS instance.
+            snapshot_identifier (str): Optional. The identifier for the snapshot. If not provided, a default one will be generated.
+
+        Returns:
+            dict: The response from AWS after creating the snapshot.
+        """
+        if not snapshot_identifier:
+            # Generate a snapshot name using the instance ID and current timestamp
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            snapshot_identifier = f"{db_instance_identifier}-snapshot-{timestamp}"
+
+        # Create the snapshot
+        response = self.client.create_db_snapshot(
+            DBInstanceIdentifier=db_instance_identifier,
+            DBSnapshotIdentifier=snapshot_identifier
+        )
+
+        # Notify that the snapshot was created
+        NotificatonV1.main(subject="RDS Snapshot Created",
+                           body=f"The snapshot with ID: {snapshot_identifier} for instance {db_instance_identifier} has been created.")
+
+        return response

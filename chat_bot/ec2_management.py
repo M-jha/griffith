@@ -48,7 +48,7 @@ class EC2Resource:
         NotificatonV1.main(subject="Stop EC2 Instance",
                            body=f"The EC2 instance with instance_id : {instance_ids} is stop")
 
-    def restart_instances(self, instance_ids, status):
+    def reboot_instance(self, instance_ids, status):
         """
         Restart EC2 instances by stopping and then starting them.
 

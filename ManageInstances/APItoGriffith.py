@@ -9,12 +9,14 @@ from abc import ABC, abstractmethod
 from flask_cors import CORS
 from chat_bot.magnificent_bot import GPTFunctionExecutor
 from Notifications import NotificatonV1
+from datetime import datetime
+
 
 app = Flask(__name__)
 CORS(app)
 
 # CSV file path
-CSV_FILE_PATH = '/home/dipsi/griffith/ManageInstances/ec2_conditions.csv'
+CSV_FILE_PATH = 'ec2_conditions.csv'
 
 # Ensure the CSV file exists with headers if it's not present
 if not os.path.exists(CSV_FILE_PATH):
@@ -36,6 +38,12 @@ class AWSResource(ABC):
 
     @abstractmethod
     def stop_instance(self, instance_id):
+        pass
+
+    def create_snapshot(self, db_instance_identifier, snapshot_identifier=None):
+        pass
+
+    def list_snapshots(self, db_instance_identifier=None):
         pass
 
 
@@ -61,6 +69,12 @@ class EC2Resource(AWSResource):
                            body=f"The EC2 instance with instance_id : {instance_id} is Stopped")
         return f"EC2 instance {instance_id} is stopping."
 
+    def create_snapshot(self, db_instance_identifier, snapshot_identifier=None):
+        pass
+
+    def list_snapshots(self, db_instance_identifier=None):
+        pass
+
 
 class RDSResource(AWSResource):
 
@@ -84,6 +98,47 @@ class RDSResource(AWSResource):
                            body=f"The RDS instance with instance_id : {instance_id} is Stopped")
         return f"RDS instance {instance_id} is stopping."
 
+    def create_snapshot(self, db_instance_identifier, snapshot_identifier=None):
+        """
+        Create a snapshot of the specified RDS instance.
+
+        Parameters:
+            db_instance_identifier (str): The identifier of the RDS instance.
+            snapshot_identifier (str): Optional. The identifier for the snapshot. If not provided, a default one will be generated.
+
+        Returns:
+            dict: The response from AWS after creating the snapshot.
+        """
+        if not snapshot_identifier:
+            # Generate a snapshot name using the instance ID and current timestamp
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            snapshot_identifier = f"{db_instance_identifier}-snapshot-{timestamp}"
+
+        # Create the snapshot
+        response = self.client.create_db_snapshot(
+            DBInstanceIdentifier=db_instance_identifier,
+            DBSnapshotIdentifier=snapshot_identifier
+        )
+        return response
+
+    def list_snapshots(self, db_instance_identifier=None):
+        """
+        List all snapshots of the specified RDS instance, or all snapshots if no instance is specified.
+
+        Parameters:
+            db_instance_identifier (str): Optional. The identifier of the RDS instance to list snapshots for.
+
+        Returns:
+            list: A list of RDS snapshots.
+        """
+        if db_instance_identifier:
+            response = self.client.describe_db_snapshots(DBInstanceIdentifier=db_instance_identifier)
+        else:
+            response = self.client.describe_db_snapshots()
+
+        snapshots = response['DBSnapshots']
+        return snapshots
+
 
 class AWSResourceFactory:
 
@@ -97,7 +152,7 @@ class AWSResourceFactory:
             raise ValueError(f"Resource type '{resource_type}' is not supported.")
 
 
-# API to add data to CSV
+# API to add or update data in CSV
 @app.route('/add_instance_condition', methods=['POST'])
 def add_instance_condition():
     data = request.json
@@ -118,10 +173,33 @@ def add_instance_condition():
     if not instance_id or not category:
         return jsonify({'error': 'Missing InstanceID or Category in the request'}), 400
 
-    # Append the data to the CSV
-    with open(CSV_FILE_PATH, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([
+    updated = False
+    rows = []
+
+    # Read the existing CSV file
+    with open(CSV_FILE_PATH, mode='r', newline='') as file:
+        reader = csv.reader(file)
+        header = next(reader)  # Skip the header row
+        rows = list(reader)
+
+    # Check if the combination of InstanceID and Category exists and update it
+    for i, row in enumerate(rows):
+        if row[0] == instance_id and row[1] == category:  # Check if InstanceID and Category match
+            rows[i] = [
+                instance_id,
+                category,
+                weekend,
+                nighttime,
+                public_holiday,
+                custom_start_time,
+                custom_end_time
+            ]
+            updated = True
+            break
+
+    # If not updated, append a new row
+    if not updated:
+        rows.append([
             instance_id,
             category,
             weekend,
@@ -131,7 +209,16 @@ def add_instance_condition():
             custom_end_time
         ])
 
-    return jsonify({'message': 'Instance condition added successfully!'}), 201
+    # Write the updated data back to the CSV file
+    with open(CSV_FILE_PATH, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['InstanceID', 'Category', 'Weekend', 'NightTime', 'PublicHoliday', 'CustomStartTime', 'CustomEndTime'])
+        writer.writerows(rows)
+
+    if updated:
+        return jsonify({'message': 'Instance condition updated successfully!'}), 200
+    else:
+        return jsonify({'message': 'Instance condition added successfully!'}), 201
 
 
 # API to list EC2 instances
@@ -279,6 +366,39 @@ def get_org_members():
         return jsonify({"data": member_list}), 200  # Send members under "data"
     else:
         return jsonify({"error": f"Failed to retrieve members: {response.status_code} - {response.text}"}), response.status_code
+
+
+@app.route('/create_rds_snapshot', methods=['POST'])
+def create_rds_snapshot():
+    session = boto3.Session()  # Create a new session
+    rds_resource = AWSResourceFactory.create_resource('RDS', session)
+
+    data = request.json
+    db_instance_id = data.get('DBInstanceIdentifier')
+    snapshot_identifier = data.get('SnapshotIdentifier')
+
+    if not db_instance_id:
+        return jsonify({'error': 'DBInstanceIdentifier is required'}), 400
+
+    try:
+        response = rds_resource.create_snapshot(db_instance_identifier=db_instance_id, snapshot_identifier=snapshot_identifier)
+        return jsonify({'message': 'Snapshot created successfully!', 'snapshot': response}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/list_rds_snapshots', methods=['GET'])
+def list_rds_snapshots():
+    session = boto3.Session()  # Create a new session
+    rds_resource = AWSResourceFactory.create_resource('RDS', session)
+
+    db_instance_id = request.args.get('DBInstanceIdentifier')
+
+    try:
+        snapshots = rds_resource.list_snapshots(db_instance_identifier=db_instance_id)
+        return jsonify({'snapshots': snapshots}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # Run the Flask app

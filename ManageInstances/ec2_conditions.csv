@@ -1,2 +1,4 @@
-InstanceID,Category,Weekend,NightTime,CustomStartTime,CustomEndTime
+InstanceID,Category,Weekend,NightTime,PublicHoliday,CustomStartTime,CustomEndTime
 i-0a7fa50f86821225b,ec2,False,True,19:53,19:55
+i-0123456789abcdef,production,yes,yes,no,08:00,18:00
+i-012345678889abcdef,production,yes,yes,no,08:00,18:00

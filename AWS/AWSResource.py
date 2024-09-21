@@ -1,5 +1,6 @@
 import boto3
 import time
+from datetime import datetime
 from abc import ABC, abstractmethod
 
 
@@ -58,6 +59,26 @@ class AWSResource(ABC):
 
     @abstractmethod
     def get_instance_status(self, db_instance_identifier):
+        """
+        Get the status of a specific instance.
+
+        Parameters:
+            db_instance_identifier (str): The identifier of the instance.
+        """
+        pass
+
+    @abstractmethod
+    def create_snapshot(self, db_instance_identifier):
+        """
+        Get the status of a specific instance.
+
+        Parameters:
+            db_instance_identifier (str): The identifier of the instance.
+        """
+        pass
+
+    @abstractmethod
+    def list_snapshots(self, db_instance_identifier):
         """
         Get the status of a specific instance.
 
@@ -159,6 +180,12 @@ class EC2Resource(AWSResource):
             return response['InstanceStatuses'][0]['InstanceState']['Name']
         else:
             return 'Instance status not available'
+
+    def create_snapshot(self, db_instance_identifier, snapshot_identifier=None):
+        pass
+
+    def list_snapshots(self, db_instance_identifier=None):
+        pass
 
 
 class RDSResource(AWSResource):
@@ -265,6 +292,48 @@ class RDSResource(AWSResource):
         status = response['DBInstances'][0]['DBInstanceStatus']
         return status
 
+    def create_snapshot(self, db_instance_identifier, snapshot_identifier=None):
+        """
+        Create a snapshot of the specified RDS instance.
+
+        Parameters:
+            db_instance_identifier (str): The identifier of the RDS instance.
+            snapshot_identifier (str): Optional. The identifier for the snapshot. If not provided, a default one will be generated.
+
+        Returns:
+            dict: The response from AWS after creating the snapshot.
+        """
+        if not snapshot_identifier:
+            # Generate a snapshot name using the instance ID and current timestamp
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            snapshot_identifier = f"{db_instance_identifier}-snapshot-{timestamp}"
+
+        # Create the snapshot
+        response = self.client.create_db_snapshot(
+            DBInstanceIdentifier=db_instance_identifier,
+            DBSnapshotIdentifier=snapshot_identifier
+        )
+
+        return response
+
+    def list_snapshots(self, db_instance_identifier=None):
+        """
+        List all snapshots of the specified RDS instance, or all snapshots if no instance is specified.
+
+        Parameters:
+            db_instance_identifier (str): Optional. The identifier of the RDS instance to list snapshots for.
+
+        Returns:
+            list: A list of RDS snapshots.
+        """
+        if db_instance_identifier:
+            response = self.client.describe_db_snapshots(DBInstanceIdentifier=db_instance_identifier)
+        else:
+            response = self.client.describe_db_snapshots()
+
+        snapshots = response['DBSnapshots']
+        return snapshots
+
 
 class AWSResourceFactory:
     """
@@ -305,28 +374,39 @@ def main():
     ec2_resource = AWSResourceFactory.create_resource('EC2', session)
 
     rds_instances = rds_resource.list_instances()
-    ec2_instances = ec2_resource.list_instances()
 
-    # Create RDS instance
-    rds_response = rds_resource.create_instance(
-        DBInstanceIdentifier='mydbinstance2',
-        DBInstanceClass='db.t3.micro',
-        Engine='mysql',
-        AllocatedStorage=20,
-        MasterUsername='admin',
-        MasterUserPassword='adminpassword'
-    )
-    print(f"RDS Instance Creation Response: {rds_response}")
+    # start_rds_instances = rds_resource.start_instances(['mydbinstance'])
 
-    # List RDS instances
+    snapshot = rds_resource.create_snapshot('mydbinstance')
+
+    list_snapshot = rds_resource.list_snapshots()
+
     rds_instances = rds_resource.list_instances()
-    print("\nRDS Instances:")
-    for instance in rds_instances:
-        print(f"DB Instance Identifier: {instance['DBInstanceIdentifier']}")
 
-    # Get the status of a specific RDS instance
-    instance_status = rds_resource.get_instance_status('mydbinstance')
-    print(f"\nRDS Instance Status: {instance_status}")
+
+
+    # # Create RDS instance
+    # rds_response = rds_resource.create_instance(
+    #     DBInstanceIdentifier='mydbinstance2',
+    #     DBInstanceClass='db.t3.micro',
+    #     Engine='mysql',
+    #     AllocatedStorage=20,
+    #     MasterUsername='admin',
+    #     MasterUserPassword='adminpassword'
+    # )
+    # print(f"RDS Instance Creation Response: {rds_response}")
+    #
+    # # List RDS instances
+    # rds_instances = rds_resource.list_instances()
+    # print("\nRDS Instances:")
+    # for instance in rds_instances:
+    #     print(f"DB Instance Identifier: {instance['DBInstanceIdentifier']}")
+    #
+    # # Get the status of a specific RDS instance
+    # instance_status = rds_resource.get_instance_status('mydbinstance')
+    # print(f"\nRDS Instance Status: {instance_status}")
+
+
 
 
 if __name__ == "__main__":
