@@ -258,7 +258,8 @@ def bot_interaction():
 
 # GitHub API URL and PAT
 org_name = "GriffithGithubOrg"
-github_pat = "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"
+github_pat = os.getenv("GIT_SECRET")
+print(github_pat)
 
 # Route to get organization members
 @app.route('/org-members', methods=['GET'])
