@@ -1,6 +1,7 @@
 import boto3
 import pandas as pd
 from datetime import datetime, time as dt_time
+from Notifications import NotificatonV1
 
 # Skip is_public_holiday function and remove it from logic
 
@@ -45,10 +46,14 @@ def manage_ec2_instance(row):
         if should_stop_instance(row):
             if current_status == 'running':
                 ec2_client.stop_instances(InstanceIds=[instance_id])
+                NotificatonV1.main(subject="Stop EC2 Instance",
+                                   body=f"The EC2 instance with instance_id : {instance_id} is stopped")
                 print(f"Stopped EC2 instance: {instance_id}")
         else:
             if current_status == 'stopped':
                 ec2_client.start_instances(InstanceIds=[instance_id])
+                NotificatonV1.main(subject="Start EC2 Instance",
+                                   body=f"The EC2 instance with instance_id : {instance_id} is started")
                 print(f"Started EC2 instance: {instance_id}")
 
 def manage_rds_instance(row):
@@ -62,10 +67,14 @@ def manage_rds_instance(row):
         if should_stop_instance(row):
             if current_status == 'available':
                 rds_client.stop_db_instance(DBInstanceIdentifier=db_instance_id)
+                NotificatonV1.main(subject="Stop RDS Instance",
+                                   body=f"The RDS instance with instance_id : {db_instance_id} is stopped")
                 print(f"Stopped RDS instance: {db_instance_id}")
         else:
             if current_status == 'stopped':
                 rds_client.start_db_instance(DBInstanceIdentifier=db_instance_id)
+                NotificatonV1.main(subject="Start RDS Instance",
+                                   body=f"The RDS instance with instance_id : {db_instance_id} is started")
                 print(f"Started RDS instance: {db_instance_id}")
 
 if __name__ == "__main__":

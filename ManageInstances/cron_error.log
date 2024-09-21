@@ -67,3 +67,9 @@ Traceback (most recent call last):
 KeyError: 'Category'
 
 ERROR conda.cli.main_run:execute(125): `conda run /home/murli/miniconda3/envs/hackathon2024/bin/python /home/murli/hackathon-2024/ManageInstances/ManageInstance.py` failed. (See above for error)
+Traceback (most recent call last):
+  File "/home/murli/hackathon-2024/ManageInstances/ManageInstance.py", line 4, in <module>
+    from Notifications import NotificatonV1
+ModuleNotFoundError: No module named 'Notifications'
+
+ERROR conda.cli.main_run:execute(125): `conda run /home/murli/miniconda3/envs/hackathon2024/bin/python /home/murli/hackathon-2024/ManageInstances/ManageInstance.py` failed. (See above for error)

@@ -261,7 +261,7 @@ class GPTFunctionExecutor:
 
     def run(self):
         # Fetch README.md content
-        readme_content = self.fetch_file_from_github('README.md')
+        readme_content = self.fetch_file_from_github('../README.md')
         if not readme_content:
             print("Failed to fetch README.md")
             return
