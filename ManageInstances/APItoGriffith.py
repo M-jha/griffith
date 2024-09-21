@@ -1,10 +1,14 @@
-from flask import Flask, request, jsonify
+import json
 import csv
 import os
 import boto3
-from datetime import datetime
+import requests
+
+from flask import Flask, request, jsonify
 from abc import ABC, abstractmethod
 from flask_cors import CORS
+from magnificent_bot import GPTFunctionExecutor
+from Notifications import NotificatonV1
 
 app = Flask(__name__)
 CORS(app)
@@ -47,10 +51,14 @@ class EC2Resource(AWSResource):
 
     def start_instance(self, instance_id):
         self.client.start_instances(InstanceIds=[instance_id])
+        NotificatonV1.main(subject="Started EC2 Instance",
+                           body=f"The EC2 instance with instance_id : {instance_id} is Started")
         return f"EC2 instance {instance_id} is starting."
 
     def stop_instance(self, instance_id):
         self.client.stop_instances(InstanceIds=[instance_id])
+        NotificatonV1.main(subject="Stopped EC2 Instance",
+                           body=f"The EC2 instance with instance_id : {instance_id} is Stopped")
         return f"EC2 instance {instance_id} is stopping."
 
 
@@ -66,10 +74,14 @@ class RDSResource(AWSResource):
 
     def start_instance(self, instance_id):
         self.client.start_db_instance(DBInstanceIdentifier=instance_id)
+        NotificatonV1.main(subject="Started RDS Instance",
+                           body=f"The RDS instance with instance_id : {instance_id} is Started")
         return f"RDS instance {instance_id} is starting."
 
     def stop_instance(self, instance_id):
         self.client.stop_db_instance(DBInstanceIdentifier=instance_id)
+        NotificatonV1.main(subject="Stopped RDS Instance",
+                           body=f"The RDS instance with instance_id : {instance_id} is Stopped")
         return f"RDS instance {instance_id} is stopping."
 
 
@@ -207,6 +219,65 @@ def manage_rds_instance(action):
         return jsonify({'error': 'Invalid action'}), 400
 
     return jsonify({'message': message})
+
+
+@app.route('/bot_interaction', methods=['POST'])
+def bot_interaction():
+    data = request.json
+    user_input = data.get('user_input')
+
+    if not user_input:
+        return jsonify({'error': 'Missing user input in the request'}), 400
+
+    try:
+        # Initialize GPTFunctionExecutor with your GitHub repo details
+        repo_owner = 'M-jha'  # Replace with your GitHub username
+        repo_name = 'griffith'  # Replace with your repository name
+        executor = GPTFunctionExecutor(repo_owner, repo_name, branch='hackathon_2024')
+        executor.run()
+
+        # Run the bot to interpret user input
+        assistant_reply = executor.interpret_user_prompt(user_input)
+
+        # Try to extract function details from the bot's response
+        function_details_json = executor.extract_function_details_from_reply(assistant_reply)
+
+        if function_details_json:
+            # Parse the function details JSON
+            function_details_list = json.loads(function_details_json)
+
+            # Dynamically execute functions based on the parsed details
+            results = executor.execute_functions(function_details_list)
+            return jsonify({'bot_reply': assistant_reply, 'execution_results': results})
+
+        return jsonify({'bot_reply': assistant_reply, 'message': 'No function details found in the bot response'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# GitHub API URL and PAT
+org_name = "GriffithGithubOrg"
+github_pat = "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"
+
+# Route to get organization members
+@app.route('/org-members', methods=['GET'])
+def get_org_members():
+    url = f"https://api.github.com/orgs/{org_name}/members"
+    headers = {
+        "Authorization": f"token {github_pat}"
+    }
+
+    # Make the request to GitHub API
+    response = requests.get(url, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        members = response.json()
+        member_list = [{"username": member['login']} for member in members]
+        return jsonify({"data": member_list}), 200  # Send members under "data"
+    else:
+        return jsonify({"error": f"Failed to retrieve members: {response.status_code} - {response.text}"}), response.status_code
 
 
 # Run the Flask app
