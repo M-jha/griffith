@@ -109,11 +109,13 @@ class GPTFunctionExecutor:
             {method_descriptions}
             """
             prompt_parts.append(class_description)
+
+        # Join the parts together to form the complete system prompt
         system_prompt = "\n".join(prompt_parts)
         return system_prompt
 
     def interpret_user_prompt(self, user_prompt):
-        # Build the system prompt with the knowledge base
+        # Generate the system prompt once
         system_prompt = f"""
         You are an assistant that helps users manage AWS resources by mapping their requests to Python class methods based on their descriptions.
 
@@ -122,23 +124,33 @@ class GPTFunctionExecutor:
 
         Your task is to:
 
-        1. Understand the user's request and provide a brief summary.
+        1. Understand the user's request and identify the appropriate class method(s) from the available list that can fulfill the request.
 
-        2. Identify the appropriate class method(s) from the available list that can fulfill the request.
+        2. **If the request requires parameters, prompt the user in the same interaction to provide them.** Example:
+            - "create a new IAM user with username X"
+            - "launch a new EC2 instance with type Y"
 
-        3. Confirm with the user if they want to proceed with the action.
-
-        4. If the user confirms, proceed to execute the action.
-
-        Please maintain a conversational tone.
-
-        Ensure any function details are output in JSON format as shown:
+        3. Output the function details **only in JSON format**. The format should be:
 
         ```json
-        [{{"class_name": "<ClassName>", "function_name": "<FunctionName>", "parameters": {{...}}}}, ...]
-        Only include classes and methods from the available list. """
+        [
+            {{
+                "class_name": "<ClassName>",
+                "function_name": "<FunctionName>",
+                "parameters": {{
+                    "<param1>": "<value1>",
+                    "<param2>": "<value2>"
+                }}
+            }}
+        ]
+        ```
 
-        # Update the conversation history with the system prompt if it's the first turn
+        Ensure the JSON block is formatted properly, including opening and closing code blocks marked by ```json.
+
+        Do not include any conversational text in your response. Only output JSON.
+        """
+
+        # Add the system prompt only if it's the first turn
         if not self.conversation_history:
             self.conversation_history.append({"role": "system", "content": system_prompt})
 
@@ -180,50 +192,69 @@ class GPTFunctionExecutor:
         cls = getattr(module, class_name)
         return cls
 
+    def load_class_and_execute_method(self, class_name, function_name, parameters):
+        """
+        Dynamically load a class from a local file and execute the desired method.
+        """
+        try:
+            # Check if the class belongs to a known module and import locally
+            if class_name == "IAMPolicyAutomation":
+                from iam_policy_automation import IAMPolicyAutomation
+                cls = IAMPolicyAutomation
+            elif class_name == "EC2Management":
+                from ec2_management import EC2Management
+                cls = EC2Management
+            elif class_name == "RDSManagement":
+                from rds_management import RDSManagement
+                cls = RDSManagement
+            else:
+                print(f"Error: Unsupported class '{class_name}'")
+                return None
+
+            # Initialize the class
+            instance = cls()
+
+            # Check if the method exists in the class
+            if not hasattr(instance, function_name):
+                print(f"Error: Method '{function_name}' not found in class '{class_name}'.")
+                return None
+
+            # Get the method from the instance
+            method = getattr(instance, function_name)
+
+            # Execute the method with the provided parameters
+            result = method(**parameters)
+            print(f"Executed {class_name}.{function_name} successfully. Result: {result}")
+            return result
+
+        except ModuleNotFoundError as e:
+            print(f"Error: Module not found for class '{class_name}'. Ensure the module is available locally.")
+        except AttributeError as e:
+            print(f"Error: Method '{function_name}' not found in class '{class_name}'.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
     def execute_functions(self, function_details_list):
         results = []
-        class_instances = {}
 
         for function_details in function_details_list:
             class_name = function_details['class_name']
             function_name = function_details['function_name']
             parameters = function_details['parameters']
 
-            # Load the class if not already loaded
-            if class_name not in class_instances:
-                # Find the file where the class is defined
-                for file_path in self.code_files:
-                    file_content = self.fetch_file_from_github(file_path)
-                    if file_content and f"class {class_name}" in file_content:
-                        cls = self.load_class_from_file(file_content, class_name)
-                        instance = cls()
-                        class_instances[class_name] = instance
-                        break
-                else:
-                    print(f"Class {class_name} not found.")
-                    continue
-
-            # Get the instance and method
-            instance = class_instances[class_name]
-            method = getattr(instance, function_name, None)
-            if not method:
-                print(f"Method {function_name} not found in class {class_name}.")
-                continue
-
-            # Execute the method
-            try:
-                result = method(**parameters)
+            # Dynamically load class and execute the method locally
+            result = self.load_class_and_execute_method(class_name, function_name, parameters)
+            if result is not None:
                 results.append({
                     'class_name': class_name,
                     'function_name': function_name,
                     'result': result
                 })
-            except Exception as e:
-                print(f"Assistant: Error executing {class_name}.{function_name}: {e}")
+            else:
                 results.append({
                     'class_name': class_name,
                     'function_name': function_name,
-                    'error': str(e)
+                    'error': f"Failed to execute {class_name}.{function_name}"
                 })
 
         return results
@@ -275,41 +306,50 @@ class GPTFunctionExecutor:
             assistant_reply = self.interpret_user_prompt(user_input)
             print(f"Assistant: {assistant_reply}")
 
-            # Check if the assistant is asking for confirmation
-            if ("Do you want me to proceed?" in assistant_reply or
-                    "Is this correct?" in assistant_reply or
-                    "Would you like me to execute" in assistant_reply):
-                # Get user confirmation
-                confirmation = safe_input("You: ")
-                self.conversation_history.append({"role": "user", "content": confirmation})
+            # Extract the function details if provided in the assistant's reply
+            function_details_json = self.extract_function_details_from_reply(assistant_reply)
+            print("f_json:", function_details_json)
+            if function_details_json:
+                try:
+                    function_details_list = json.loads(function_details_json)
+                    print("f_lists:", function_details_list)
+                except json.JSONDecodeError as e:
+                    print(f"Assistant: Error parsing JSON: {e}")
+                    continue
 
-                if confirmation.lower() in ["yes", "y"]:
+                # Check for missing parameters and ask the user to provide them
+                missing_parameters = False
+                for function_details in function_details_list:
+                    for param, value in function_details['parameters'].items():
+                        if value == "":  # Detect empty/missing parameters
+                            missing_parameters = True
+                            user_value = safe_input(f"Assistant: Please provide a value for '{param}': ")
+                            function_details['parameters'][param] = user_value  # Update JSON with user-provided value
+
+                if missing_parameters:
+                    print(f"Updated function details: {json.dumps(function_details_list, indent=4)}")
+
+                # Ask the user for confirmation to proceed with the action
+                confirmation = safe_input(
+                    "Assistant: Do you want me to proceed with executing these actions? (yes/no)\nYou: ")
+
+                # Debugging: Print the confirmation input
+                print(f"Confirmation input: '{confirmation}'")
+
+                if confirmation.lower().strip() in ["yes", "y"]:
                     # Proceed to execute the functions
-                    # Extract the function details from the assistant's previous message
-                    function_details_json = self.extract_function_details_from_reply(assistant_reply)
-                    if function_details_json:
-                        # Parse the function details
-                        try:
-                            function_details_list = json.loads(function_details_json)
-                        except json.JSONDecodeError as e:
-                            print(f"Assistant: Error parsing JSON: {e}")
-                            continue
-
-                        # Execute the functions
-                        results = self.execute_functions(function_details_list)
-                        for res in results:
-                            if 'error' in res:
-                                print(f"Assistant: Error in {res['class_name']}.{res['function_name']}: {res['error']}")
-                            else:
-                                print(f"Assistant: Executed {res['class_name']}.{res['function_name']} successfully.")
-                                print(f"Assistant: Result: {res['result']}")
-                    else:
-                        print("Assistant: Sorry, I couldn't extract the function details.")
+                    results = self.execute_functions(function_details_list)
+                    for res in results:
+                        if 'error' in res:
+                            print(f"Assistant: Error in {res['class_name']}.{res['function_name']}: {res['error']}")
+                        else:
+                            print(f"Assistant: Executed {res['class_name']}.{res['function_name']} successfully.")
+                            print(f"Assistant: Result: {res['result']}")
                 else:
-                    # User said no, re-analyze or ask for clarification
-                    self.conversation_history.append(
-                        {"role": "assistant", "content": "Could you please clarify your request?"})
-                    print("Assistant: Could you please clarify your request?")
+                    print("Assistant: Okay, let me know if you need anything else!")
+            else:
+                # No valid function details found, continue the conversation
+                print("Assistant: I couldn't extract the function details. Please try again.")
 
     def extract_function_details_from_reply(self, assistant_reply):
         """
@@ -326,11 +366,20 @@ class GPTFunctionExecutor:
                 else:
                     json_str = assistant_reply[start_index:].strip()
             else:
-                # Try to extract JSON directly
-                json_str = assistant_reply.strip()
+                # No JSON block found, return None
+                print("No JSON block found in the assistant's reply.")
+                return None
+
             # Sanitize the JSON string
             json_str = self.sanitize_gpt_response(json_str)
-            return json_str
+
+            # Check if the string is valid JSON
+            if json_str:
+                return json_str
+            else:
+                print("Error: Extracted JSON string is empty or invalid.")
+                return None
+
         except Exception as e:
             print(f"Assistant: Error extracting function details: {e}")
             return None
@@ -346,6 +395,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
