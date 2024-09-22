@@ -6,8 +6,8 @@ This repository contains Python classes for automating the management of AWS res
 
 - [Classes and Tasks](#classes-and-tasks)
   - [IAMPolicyAutomation](#1-iampolicyautomation)
-  - [EC2Management](#2-ec2management)
-  - [RDSManagement](#3-rdsmanagement)
+  - [EC2Resource](#2-ec2management)
+  - [RDSResource](#3-rdsmanagement)
 - [Usage Examples](#usage-examples)
 - [Setup Instructions](#setup-instructions)
 - [Notes](#notes)
@@ -30,27 +30,33 @@ This repository contains Python classes for automating the management of AWS res
 - `list_iam_users()`: List all IAM users in the AWS account.
 - `get_all_user_policies(user_name)`: Get all policies attached to a user (both managed and inline).
 
-### 2. EC2Management
+### 2. EC2Resource
 
 **Purpose**: Automate EC2 instance management tasks.
 
 **Key Functions**:
 
-- `start_instance(instance_id)`: Start an EC2 instance.
-- `stop_instance(instance_id)`: Stop an EC2 instance.
-- `reboot_instance(instance_id)`: Reboot an EC2 instance.
+- `start_instances(instance_ids)`: Start an EC2 instance.
+- `stop_instances(instance_ids)`: Stop an EC2 instance.
+- `reboot_instance(instance_ids,status)`: Reboot an EC2 instance.
 - `list_instances()`: List all EC2 instances.
+- `get_instance_status(instance_id)`: Get status of instance.
+- `create_instance(**kwargs)`: Create a new EC2 instance with the provided parameters.
 
-### 3. RDSManagement
+
+### 3. RDSResource
 
 **Purpose**: Automate RDS instance management tasks.
 
 **Key Functions**:
 
-- `start_db_instance(db_instance_identifier)`: Start an RDS instance.
-- `stop_db_instance(db_instance_identifier)`: Stop an RDS instance.
-- `reboot_db_instance(db_instance_identifier)`: Reboot an RDS instance.
-- `list_db_instances()`: List all RDS instances.
+- `start_db_instance(db_instance_identifiers)`: Start an RDS instance.
+- `stop_db_instance(db_instance_identifiers)`: Stop an RDS instance.
+- `reboot_db_instance(db_instance_identifiers, status)`: Reboot an RDS instance.
+- `list_instances()`: List all RDS instances.
+- `create_instance(**kwargs)`: Create a new RDS instance with the provided parameters.
+- `get_instance_status(db_instance_identifier)`: Get the status of a specific RDS instance.
+- `create_snapshot(db_instance_identifier, snapshot_identifier=None)`: Create a snapshot of the specified RDS instance.
 
 ## Usage Examples
 
