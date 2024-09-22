@@ -61,7 +61,7 @@ This repository contains Python classes for automating the management of AWS res
 
 ### 4. GitHubResource
 
-**Purpose**: Automate IAM-related tasks such as creating users, managing policies, and attaching policies to users.
+**Purpose**: Automate GitHub organization and repository management tasks, including managing organization members, repositories, and user access levels.
 
 **Key Functions**:
 
