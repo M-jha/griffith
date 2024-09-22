@@ -13,7 +13,7 @@ class EC2Resource:
         Parameters:
             session (Session): A Boto3 session object.
         """
-        self.client = boto3.client('rds')
+        self.client = boto3.client('ec2')
 
     def list_instances_ec2(self):
         """
