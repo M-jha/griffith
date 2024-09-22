@@ -27,6 +27,7 @@ This repository contains Python classes for automating the management of AWS res
 - `create_policy_from_document(policy_name, policy_document)`: Create a new IAM policy from a policy document.
 - `update_policy(policy_arn, new_policy_document)`: Update an existing IAM policy.
 - `list_iam_roles()`: List all IAM roles in the AWS account.
+- `list_iam_users()`: List all IAM users in the AWS account.
 - `get_all_user_policies(user_name)`: Get all policies attached to a user (both managed and inline).
 
 ### 2. EC2Management

@@ -288,6 +288,26 @@ class IAMPolicyAutomation:
         except ClientError as e:
             print(f"Error deleting policy '{policy_name}': {e}")
 
+    def list_iam_users(self):
+        # Create an IAM client
+        iam_client = boto3.client('iam')
+
+        # Initialize a paginator to handle large result sets
+        paginator = iam_client.get_paginator('list_users')
+
+        # Iterate through each page of users
+        users = []
+        for page in paginator.paginate():
+            for user in page['Users']:
+                users.append({
+                    'UserName': user['UserName'],
+                    'UserId': user['UserId'],
+                    'Arn': user['Arn'],
+                    'CreateDate': user['CreateDate'].strftime('%Y-%m-%d %H:%M:%S')
+                })
+
+        return users
+
 # Main test function to validate user and policy creation
 if __name__ == "__main__":
     # Initialize the IAMPolicyAutomation class
