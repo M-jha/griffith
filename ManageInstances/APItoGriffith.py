@@ -450,6 +450,28 @@ def list_rds_snapshots():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/list_iam_users', methods=['GET'])
+def list_iam_users():
+    # Create an IAM client
+    iam_client = boto3.client('iam')
+
+    # Initialize a paginator to handle large result sets
+    paginator = iam_client.get_paginator('list_users')
+
+    # Iterate through each page of users
+    users = []
+    for page in paginator.paginate():
+        for user in page['Users']:
+            users.append({
+                'UserName': user['UserName'],
+                'UserId': user['UserId'],
+                'Arn': user['Arn'],
+                'CreateDate': user['CreateDate'].strftime('%Y-%m-%d %H:%M:%S')
+            })
+
+    # Return the user information as JSON
+    return jsonify(users), 200
+
 # Run the Flask app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
