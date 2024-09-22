@@ -98,7 +98,8 @@ class GPTFunctionExecutor:
             'iam_policy_automation.py',
             'ec2_management.py',
             'rds_management.py',
-            'github_manager.py'
+            'github_manager.py',
+            'AnalyseResource.py'
         ]
 
         # Build the code knowledge base
