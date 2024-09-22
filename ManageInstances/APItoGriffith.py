@@ -3,6 +3,7 @@ import csv
 import os
 import boto3
 import requests
+import traceback
 
 from flask import Flask, request, jsonify
 from abc import ABC, abstractmethod
@@ -355,7 +356,7 @@ def bot_interaction():
         # Initialize GPTFunctionExecutor with your GitHub repo details
         repo_owner = 'M-jha'
         repo_name = 'griffith'
-        executor = GPTFunctionExecutor(repo_owner, repo_name, branch='main')
+        executor = GPTFunctionExecutor(repo_owner, repo_name, branch='hackathon_2024')
 
         # Initialize the executor to set up the knowledge base
         executor.initialize()
@@ -390,6 +391,7 @@ def bot_interaction():
         return jsonify(response)
 
     except Exception as e:
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # GitHub API URL and PAT

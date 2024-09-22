@@ -289,6 +289,12 @@ class IAMPolicyAutomation:
             print(f"Error deleting policy '{policy_name}': {e}")
 
     def list_iam_users(self):
+        """
+        List all IAM users in the AWS account.
+
+        Returns:
+            list: A list of IAM users.
+        """
         # Create an IAM client
         iam_client = boto3.client('iam')
 

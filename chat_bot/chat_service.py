@@ -22,7 +22,10 @@ class GPTFunctionExecutor:
         openai.api_key = os.getenv('AZURE_OPENAI_API_KEY', '09cbdfcff42a458eb956d555c6512ab6')
 
     def fetch_file_from_github(self, file_path):
-        url = f'https://raw.githubusercontent.com/{self.repo_owner}/{self.repo_name}/{self.branch}/{file_path}'
+        if file_path == 'README.md':
+            url = f'https://raw.githubusercontent.com/{self.repo_owner}/{self.repo_name}/{self.branch}/{file_path}'
+        else:
+            url = f'https://raw.githubusercontent.com/{self.repo_owner}/{self.repo_name}/{self.branch}/ManageInstances/{file_path}'
         response = requests.get(url)
         if response.status_code == 200:
             return response.text
