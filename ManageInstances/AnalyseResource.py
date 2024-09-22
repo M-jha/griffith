@@ -66,8 +66,10 @@ class AnalyseResource:
         if not cpu_data:
             return jsonify({'error': 'No data available for the specified instance and time range'}), 404
 
+        sorted_data = sorted(cpu_data, key=lambda x: x['date'])
+
         # Return the data as JSON
-        return cpu_data
+        return sorted_data
 
 def main():
     """
