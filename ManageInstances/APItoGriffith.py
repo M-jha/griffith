@@ -483,6 +483,105 @@ def list_iam_users():
     # Return the user information as JSON
     return jsonify(users), 200
 
+ # Route to list repositories for the organization
+@app.route('/org-repos', methods=['GET'])
+def get_org_repos():
+    url = f"https://api.github.com/orgs/{org_name}/repos"
+    headers = {
+        "Authorization": f"token {github_pat}"
+    }
+    # Make the request to GitHub API to get the list of repositories
+    response = requests.get(url, headers=headers)
+    # Check if the request was successful
+    if response.status_code == 200:
+        repos = response.json()
+        repo_list = [{"name": repo['name'], "url": repo['html_url']} for repo in repos]
+        return jsonify({"repositories": repo_list}), 200  # Return as JSON
+    else:
+        return jsonify({"error": f"Failed to retrieve repositories: {response.status_code} - {response.text}"}), response.status_code
+
+@app.route('/access-level', methods=['GET'])
+def get_user_access_level():
+    # Get query parameters for username and repository
+    username = request.args.get('username')
+    repo = request.args.get('repo')
+    headers = {
+        "Authorization": f"token {github_pat}"
+    }
+    if not username or not repo:
+        return jsonify({"error": "Missing username or repo parameter"}), 400
+    # GitHub API URL to check access level
+    url = f"https://api.github.com/repos/{org_name}/{repo}/collaborators/{username}/permission"
+    try:
+        # Make the request to the GitHub API
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            access_data = response.json()
+            access_level = access_data.get('permission', 'none')  # Default to 'none' if no access is found
+            return jsonify({"accessLevel": access_level}), 200
+        else:
+            return jsonify({"error": f"Failed to retrieve access level: {response.status_code} - {response.text}"}), response.status_code
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+    # Retrieve username and repo from query parameters
+    username = request.args.get('username')
+    repo = request.args.get('repo')
+    if not username or not repo:
+        return jsonify({"error": "Missing username or repo parameter"}), 400
+    # GitHub API URL to check access level
+    url = f"https://api.github.com/repos/{org_name}/{repo}/collaborators/{username}/permission"
+    # Make the request to GitHub API
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        access_data = response.json()
+        access_level = access_data.get('permission', 'none')  # Default to 'none' if no access is found
+        return jsonify({"accessLevel": access_level}), 200
+    else:
+        return jsonify({"error": f"Failed to retrieve access level: {response.status_code} - {response.text}"}), response.status_code
+
+@app.route('/manage-access', methods=['PUT'])
+def manage_user_access():
+    # Parse JSON request body
+    data = request.get_json()
+    username = data.get('username')
+    repo = data.get('repo')
+    access = data.get('access')
+    # Validate the input parameters
+    if not username or not repo or not access:
+        return jsonify({"error": "Missing username, repo, or access level"}), 400
+    # Define the headers for the GitHub API request
+    headers = {
+        'Authorization': f'Bearer {github_pat}',  # Use the GitHub PAT for authentication
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    # GitHub API URL to manage the collaborator access
+    url = f"https://api.github.com/repos/{org_name}/{repo}/collaborators/{username}"
+    # Payload for setting the permission level
+    payload = {
+        "permission": access  # 'pull', 'push', 'admin', 'maintain', or 'triage'
+    }
+    try:
+        # Make the PUT request to GitHub API to set the user's permission
+        response = requests.put(url, headers=headers, json=payload)
+        # Debugging output to see response status and body
+        print(f"GitHub API Response: {response.status_code}")
+        print(f"GitHub API Response Text: {response.text}")
+        print(f"Username: {username}, Access: {access}")
+        print({"message": f"Access level for {username} has been updated to {access} in {repo}."})  # Print the message before jsonify
+        # Prepare success message
+        success_message = {"message": f"Access level for {username} has been updated to {access} in {repo}."}
+        # Check for successful responses
+        if response.status_code == 201:
+            return jsonify(success_message), 201
+        elif response.status_code == 204:
+            # Instead of returning 204 (No Content), return 200 OK with the message
+            return jsonify(success_message), 200
+        else:
+            return jsonify({"error": f"Failed to manage access: {response.status_code} - {response.text}"}), response.status_code
+    except requests.RequestException as e:
+        print(f"RequestException: {e}")  # Log the exception
+        return jsonify({"error": str(e)}), 500
+
 # Run the Flask app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
