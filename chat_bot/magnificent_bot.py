@@ -199,7 +199,7 @@ class GPTFunctionExecutor:
         try:
             # Check if the class belongs to a known module and import locally
             if class_name == "IAMPolicyAutomation":
-                from iam_policy_automation import IAMPolicyAutomation
+                from ManageInstances.iam_policy_automation import IAMPolicyAutomation
                 cls = IAMPolicyAutomation
             elif class_name == "EC2Management":
                 from ec2_management import EC2Management
