@@ -61,20 +61,23 @@ class EC2Resource:
         NotificatonV1.main(subject="Restarted EC2 Instance",
                            body=f"The EC2 instance with instance_id : {instance_ids} is restarted")
 
-    def create_instance(self, image_id, instance_type, key_name, security_group_ids, subnet_id):
+    def create_instance(self, key_name):
         """
-        Create a new EC2 instance with the provided parameters.
+        Create a new EC2 instance with fixed parameters except for the key pair name.
 
         Parameters:
-            image_id (str): The ID of the AMI to use for the instance.
-            instance_type (str): The type of instance to create (e.g., 't2.micro').
             key_name (str): The name of the key pair to use.
-            security_group_ids (list): A list of security group IDs.
-            subnet_id (str): The ID of the subnet to launch the instance in.
 
         Returns:
             str: The ID of the newly created EC2 instance.
         """
+
+        image_id = 'ami-076e3756930a93fbb'
+        instance_type = 't2.micro'
+        security_group_ids = ['sg-7288db58']
+        subnet_id = 'subnet-caa77ab2'
+
+        # Create the EC2 instance with the fixed parameters and the provided key_name
         response = self.client.run_instances(
             ImageId=image_id,
             InstanceType=instance_type,
@@ -84,10 +87,15 @@ class EC2Resource:
             SecurityGroupIds=security_group_ids,
             SubnetId=subnet_id,
         )
+
+        # Get the instance ID of the newly created instance
         instance_id = response['Instances'][0]['InstanceId']
         print(f"EC2 instance created with ID: {instance_id}")
+
+        # Notification for instance creation
         NotificatonV1.main(subject="Created EC2 Instance",
-                           body=f"The EC2 instance with instance_id : {instance_id} is created")
+                           body=f"The EC2 instance with instance_id: {instance_id} is created")
+
         return instance_id
 
     def get_instance_status(self, instance_id):

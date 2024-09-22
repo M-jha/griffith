@@ -43,7 +43,7 @@ This repository contains Python classes for automating the management of AWS res
 - `reboot_instance(instance_ids,status)`: Reboot an EC2 instance.
 - `list_instances_ec2()`: List all EC2 instances.
 - `get_instance_status(instance_id)`: Get status of instance.
-- `create_instance(image_id, instance_type, key_name, security_group_ids, subnet_id)`: Create a new EC2 instance with the provided parameters.
+- `create_instance(key_name)`: Create a new EC2 instance with the provided parameters.
 
 
 ### 3. RDSResource
@@ -56,7 +56,7 @@ This repository contains Python classes for automating the management of AWS res
 - `stop_db_instance(db_instance_identifiers)`: Stop an RDS instance.
 - `reboot_db_instance(db_instance_identifiers, status)`: Reboot an RDS instance.
 - `list_instances()`: List all RDS instances.
-- `create_instance(params)`: Create a new RDS instance with the provided parameters.
+- `create_instance(db_instance_identifier)`: Create a new RDS instance with the provided parameters.
 - `get_instance_status(db_instance_identifier)`: Get the status of a specific RDS instance.
 - `create_snapshot(db_instance_identifier, snapshot_identifier=None)`: Create a snapshot of the specified RDS instance.
 
