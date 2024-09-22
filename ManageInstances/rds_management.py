@@ -76,37 +76,46 @@ class RDSResource:
             NotificatonV1.main(subject="Restarted RDS Instance",
                                body=f"The RDS instance with instance_id : {db_instance_identifier} is restarted")
 
-    def create_instance(self, **kwargs):
+    def create_instance(self, db_instance_identifier):
         """
-        Create a new RDS instance with the provided parameters.
+        Create a new RDS instance with fixed parameters except for DBInstanceIdentifier.
 
         Parameters:
-            **kwargs: Keyword arguments for instance creation (e.g., DBInstanceIdentifier, DBInstanceClass, Engine).
+            db_instance_identifier (str): The unique identifier for the new RDS instance.
 
         Returns:
             dict: The response from AWS after creating the RDS instance.
         """
-        required_params = ['DBInstanceIdentifier', 'DBInstanceClass', 'Engine']
-        for param in required_params:
-            if param not in kwargs:
-                raise ValueError(f"Missing required parameter: {param}")
 
+        db_instance_class = 'db.t3.micro'
+        engine = 'mysql'
+        allocated_storage = 20
+        master_username = 'admin'
+        master_user_password = 'adminpassword'
+        backup_retention_period = 7
+        port = 3306
+        multi_az = False
+        engine_version = '8.0'
+        publicly_accessible = True
+
+        # Create the RDS instance with the fixed parameters and the provided DBInstanceIdentifier
         response = self.client.create_db_instance(
-            DBInstanceIdentifier=kwargs['DBInstanceIdentifier'],
-            DBInstanceClass=kwargs['DBInstanceClass'],
-            Engine=kwargs['Engine'],
-            AllocatedStorage=kwargs.get('AllocatedStorage', 20),
-            MasterUsername=kwargs.get('MasterUsername', 'admin'),
-            MasterUserPassword=kwargs.get('MasterUserPassword', 'password123'),
-            BackupRetentionPeriod=kwargs.get('BackupRetentionPeriod', 7),
-            Port=kwargs.get('Port', 3306),
-            MultiAZ=kwargs.get('MultiAZ', False),
-            EngineVersion=kwargs.get('EngineVersion', '8.0'),
-            PubliclyAccessible=kwargs.get('PubliclyAccessible', True)
+            DBInstanceIdentifier=db_instance_identifier,
+            DBInstanceClass=db_instance_class,
+            Engine=engine,
+            AllocatedStorage=allocated_storage,
+            MasterUsername=master_username,
+            MasterUserPassword=master_user_password,
+            BackupRetentionPeriod=backup_retention_period,
+            Port=port,
+            MultiAZ=multi_az,
+            EngineVersion=engine_version,
+            PubliclyAccessible=publicly_accessible
         )
 
+        # Notify about the instance creation
         NotificatonV1.main(subject="Created RDS Instance",
-                           body=f"The RDS instance with instance_id : {response} is created")
+                           body=f"The RDS instance with instance_id: {response} is created")
 
         return response
 
