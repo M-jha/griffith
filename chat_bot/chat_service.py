@@ -302,6 +302,12 @@ class GPTFunctionExecutor:
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 cls = getattr(module, "GitHubResource")
+            elif class_name == 'AnalyseResource':
+                module_path = os.path.join(os.getcwd(), 'AnalyseResource.py')
+                spec = importlib.util.spec_from_file_location("AnalyseResource", module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                cls = getattr(module, "AnalyseResource")
             else:
                 raise Exception(f"Error: Unsupported class '{class_name}'")
 
@@ -402,4 +408,3 @@ class GPTFunctionExecutor:
             'bot_reply': assistant_reply,
             'function_details': function_details_list
         }
-

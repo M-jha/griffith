@@ -9,6 +9,7 @@ This repository contains Python classes for automating the management of AWS res
   - [EC2Resource](#2-ec2management)
   - [RDSResource](#3-rdsmanagement)
   - [GitHubResource](#4-gitmanagement)
+  - [AnalyseResource](#5-analysis)
 - [Usage Examples](#usage-examples)
 - [Setup Instructions](#setup-instructions)
 - [Notes](#notes)
@@ -72,7 +73,13 @@ This repository contains Python classes for automating the management of AWS res
 - `create_repo(repo_name, private=True)`: Create a new repository in the GitHub organization (private by default).
 - `delete_repo(repo_name)`: Delete a repository from the organization.
 
+### 5. AnalyseResource
 
+**Purpose**: Automate the process to analyse resources.
+
+**Key Functions**:
+
+- `get_cpu_data(instance_id)`: Analyse the resource usage.
 
 ## Usage Examples
 
