@@ -353,6 +353,15 @@ def bot_interaction():
         return jsonify({'error': 'Missing user input in the request'}), 400
 
     try:
+
+        # If we don't have previous function details and the user input is 'NO' or 'no'
+        if not previous_function_details and user_input.lower().strip() in ["NO", "no"]:
+            # Proceed with executing the function
+            return jsonify({
+                'message': 'Ok, Thank You',
+                'execution_results': ''
+            })
+
         # Initialize GPTFunctionExecutor with your GitHub repo details
         repo_owner = 'M-jha'
         repo_name = 'griffith'
