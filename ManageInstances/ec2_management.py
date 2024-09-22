@@ -61,24 +61,28 @@ class EC2Resource:
         NotificatonV1.main(subject="Restarted EC2 Instance",
                            body=f"The EC2 instance with instance_id : {instance_ids} is restarted")
 
-    def create_instance(self, **kwargs):
+    def create_instance(self, image_id, instance_type, key_name, security_group_ids, subnet_id):
         """
         Create a new EC2 instance with the provided parameters.
 
         Parameters:
-            **kwargs: Keyword arguments for instance creation (e.g., ImageId, InstanceType).
+            image_id (str): The ID of the AMI to use for the instance.
+            instance_type (str): The type of instance to create (e.g., 't2.micro').
+            key_name (str): The name of the key pair to use.
+            security_group_ids (list): A list of security group IDs.
+            subnet_id (str): The ID of the subnet to launch the instance in.
 
         Returns:
             str: The ID of the newly created EC2 instance.
         """
         response = self.client.run_instances(
-            ImageId=kwargs.get('ImageId', 'ami-0c55b159cbfafe1f0'),
-            InstanceType=kwargs.get('InstanceType', 't2.micro'),
+            ImageId=image_id,
+            InstanceType=instance_type,
             MinCount=1,
             MaxCount=1,
-            KeyName=kwargs.get('KeyName'),
-            SecurityGroupIds=kwargs.get('SecurityGroupIds'),
-            SubnetId=kwargs.get('SubnetId'),
+            KeyName=key_name,
+            SecurityGroupIds=security_group_ids,
+            SubnetId=subnet_id,
         )
         instance_id = response['Instances'][0]['InstanceId']
         print(f"EC2 instance created with ID: {instance_id}")
