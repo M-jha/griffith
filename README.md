@@ -8,6 +8,7 @@ This repository contains Python classes for automating the management of AWS res
   - [IAMPolicyAutomation](#1-iampolicyautomation)
   - [EC2Resource](#2-ec2management)
   - [RDSResource](#3-rdsmanagement)
+  - [GitHubResource](#4-gitmanagement)
 - [Usage Examples](#usage-examples)
 - [Setup Instructions](#setup-instructions)
 - [Notes](#notes)
@@ -57,6 +58,21 @@ This repository contains Python classes for automating the management of AWS res
 - `create_instance(params)`: Create a new RDS instance with the provided parameters.
 - `get_instance_status(db_instance_identifier)`: Get the status of a specific RDS instance.
 - `create_snapshot(db_instance_identifier, snapshot_identifier=None)`: Create a snapshot of the specified RDS instance.
+
+### 4. GitHubResource
+
+**Purpose**: Automate IAM-related tasks such as creating users, managing policies, and attaching policies to users.
+
+**Key Functions**:
+
+- `get_org_members()`: Fetch the list of members in the GitHub organization.
+- `get_org_repos()`: Retrieve a list of repositories in the organization.
+- `get_user_access_level()`: Get the access level of a user for a specific repository.
+- `manage_user_access()`: Add or update a user's access level for a repository in the organization.
+- `create_repo(repo_name, private=True)`: Create a new repository in the GitHub organization (private by default).
+- `delete_repo(repo_name)`: Delete a repository from the organization.
+
+
 
 ## Usage Examples
 
