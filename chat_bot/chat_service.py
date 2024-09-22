@@ -8,7 +8,7 @@ import openai
 
 
 class GPTFunctionExecutor:
-    def __init__(self, repo_owner, repo_name, branch='main'):
+    def __init__(self, repo_owner, repo_name, branch='hackathon_2024'):
         self.repo_owner = repo_owner
         self.repo_name = repo_name
         self.branch = branch
@@ -268,6 +268,9 @@ class GPTFunctionExecutor:
     #     except Exception as e:
     #         print(f"An error occurred: {e}")
 
+    import os
+    import importlib.util
+
     def load_class_and_execute_method(self, class_name, function_name, parameters):
         """
         Dynamically load a class from a local file and execute the desired method.
@@ -280,12 +283,18 @@ class GPTFunctionExecutor:
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 cls = getattr(module, "IAMPolicyAutomation")
-            elif class_name == "EC2Management":
-                from ec2_management import EC2Management
-                cls = EC2Management
-            elif class_name == "RDSManagement":
-                from rds_management import RDSManagement
-                cls = RDSManagement
+            elif class_name == "EC2Resource":
+                module_path = os.path.join(os.getcwd(), 'ec2_management.py')
+                spec = importlib.util.spec_from_file_location("ec2_management", module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                cls = getattr(module, "EC2Resource")
+            elif class_name == "RDSResource":
+                module_path = os.path.join(os.getcwd(), 'rds_management.py')
+                spec = importlib.util.spec_from_file_location("rds_management", module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                cls = getattr(module, "RDSResource")
             else:
                 raise Exception(f"Error: Unsupported class '{class_name}'")
 
