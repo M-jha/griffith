@@ -7,7 +7,7 @@ import requests
 from flask import Flask, request, jsonify
 from abc import ABC, abstractmethod
 from flask_cors import CORS
-from chat_bot.magnificent_bot import GPTFunctionExecutor
+from chat_bot.chat_service import GPTFunctionExecutor
 from Notifications import NotificatonV1
 from datetime import datetime
 
