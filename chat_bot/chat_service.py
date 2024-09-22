@@ -97,7 +97,8 @@ class GPTFunctionExecutor:
         self.code_files = [
             'iam_policy_automation.py',
             'ec2_management.py',
-            'rds_management.py'
+            'rds_management.py',
+            'github_manager.py'
         ]
 
         # Build the code knowledge base
@@ -295,6 +296,12 @@ class GPTFunctionExecutor:
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 cls = getattr(module, "RDSResource")
+            elif class_name == "GitHubResource":
+                module_path = os.path.join(os.getcwd(), 'github_manager.py')
+                spec = importlib.util.spec_from_file_location("github_manager", module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                cls = getattr(module, "GitHubResource")
             else:
                 raise Exception(f"Error: Unsupported class '{class_name}'")
 
