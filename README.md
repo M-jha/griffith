@@ -68,8 +68,8 @@ This repository contains Python classes for automating the management of AWS res
 
 - `get_org_members()`: Fetch the list of members in the GitHub organization.
 - `get_org_repos()`: Retrieve a list of repositories in the organization.
-- `get_user_access_level()`: Get the access level of a user for a specific repository.
-- `manage_user_access()`: Add or update a user's access level for a repository in the organization.
+- `get_user_access_level(username, repo)`: Get the access level of a user for a specific repository.
+- `manage_user_access(username, repo, access)`: Add or update a user's access level for a repository in the organization.
 - `create_repo(repo_name, private=True)`: Create a new repository in the GitHub organization (private by default).
 - `delete_repo(repo_name)`: Delete a repository from the organization.
 
