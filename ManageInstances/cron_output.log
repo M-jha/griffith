@@ -69,3 +69,12 @@ Running Job at 08:05:02.052289
 
 Running Job at 09:05:01.931408
 
+Running Job at 10:05:02.772627
+Connected to SMTP server successfully.
+Email sent to Murli (murli@cipio.ai)
+Email sent to Dipshi (dipshi@cipio.ai)
+Email sent to Manthan (mjha@cipio.ai)
+Email sent to Sushmit (sushmitsatish@gmail.com)
+SMTP server connection closed.
+Stopped EC2 instance: i-0a7fa50f86821225b
+
