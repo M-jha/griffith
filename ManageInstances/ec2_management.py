@@ -15,7 +15,7 @@ class EC2Resource:
         """
         self.client = boto3.client('rds')
 
-    def list_instances(self):
+    def list_instances_ec2(self):
         """
         List all EC2 instances in the AWS account.
 
